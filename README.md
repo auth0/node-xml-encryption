@@ -56,3 +56,12 @@ W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/
     // result
 
     decrypted content
+
+## Supported algorithms
+
+Currently the library supports:
+
+* EncryptedKey to transport symmetric key using http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
+* EncryptedData using http://www.w3.org/2001/04/xmlenc#aes-256-cbc
+
+However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
