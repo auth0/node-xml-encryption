@@ -8,8 +8,9 @@
   "main": "./lib",
   "repository": "https://github.com/auth0/node-xml-encryption",
   "keywords": [
-    "saml",
-    "authentication"
+    "xml",
+    "encryption",
+    "xmlenc"
   ],
   "author": "Matias Woloski (Auth0)",
   "license": "MIT",
