@@ -18,6 +18,7 @@ describe('encrypt', function() {
     };
 
     xmlenc.encrypt('content to encrypt', options, function(err, result) {        
+        console.log(result);
         xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function(err, decrypted) {
           assert.equal(decrypted, 'content to encrypt');
           done();
