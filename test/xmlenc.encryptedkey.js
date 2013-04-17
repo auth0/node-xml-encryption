@@ -1,6 +1,6 @@
 var assert = require('assert'),
     fs = require('fs'),
-    xmlenc = require('../lib').XmlEnc;
+    xmlenc = require('../lib');
 
 describe('encrypt', function() {
 

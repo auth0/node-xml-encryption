@@ -6,6 +6,8 @@ W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/
 
 ### encrypt
 
+    var xmlenc = require('xmlenc');
+    
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/your_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
