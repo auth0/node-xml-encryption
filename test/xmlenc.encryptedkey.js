@@ -13,12 +13,11 @@ describe('encrypt', function() {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
-      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes-256-cbc',
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
       keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     xmlenc.encrypt('content to encrypt', options, function(err, result) {        
-        console.log(result);
         xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function(err, decrypted) {
           assert.equal(decrypted, 'content to encrypt');
           done();
