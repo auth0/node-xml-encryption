@@ -21,9 +21,10 @@ var options = {
 xmlenc.encrypt('content to encrypt', options, function(err, result) { 
     console.log(result);
 }
+~~~
 
-// result
-
+Result:
+~~~xml
 <xenc:EncryptedData Type="http://www.w3.org/2001/04/xmlenc#Element" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
   <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes-256-cbc" />
     <KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
