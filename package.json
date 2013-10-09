@@ -1,6 +1,6 @@
 {
   "name": "xml-encryption",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "devDependencies": {
     "mocha": "*",
     "should": "~1.2.2"
@@ -13,13 +13,16 @@
     "xmlenc"
   ],
   "author": "Matias Woloski (Auth0)",
+  "contributos": [
+    "Jose F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)"
+  ],
   "license": "MIT",
   "dependencies": {
     "xmldom": "~0.1.15",
-    "ursa": "~0.8.0",
     "ejs": "~0.8.3",
     "async": "~0.2.7",
-    "xpath": "0.0.5"
+    "xpath": "0.0.5",
+    "node-forge": "~0.2.14"
   },
   "scripts": {
     "test": "mocha"
