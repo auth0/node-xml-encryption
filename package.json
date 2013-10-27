@@ -1,9 +1,10 @@
 {
   "name": "xml-encryption",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "devDependencies": {
     "mocha": "*",
-    "should": "~1.2.2"
+    "should": "~1.2.2",
+    "ursa": "*"
   },
   "main": "./lib",
   "repository": "https://github.com/auth0/node-xml-encryption",
