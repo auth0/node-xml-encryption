@@ -66,15 +66,13 @@ decrypted content
 
 Currently the library supports:
 
-* EncryptedKey to transport symmetric key using:
-  
-  http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
-  http://www.w3.org/2001/04/xmlenc#rsa-1_5
+* EncryptedKey to transport symmetric key using:  
+  * http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
+  * http://www.w3.org/2001/04/xmlenc#rsa-1_5
 
-* EncryptedData using:
-  
-  http://www.w3.org/2001/04/xmlenc#aes128-cbc
-  http://www.w3.org/2001/04/xmlenc#aes256-cbc
-  http://www.w3.org/2001/04/xmlenc#tripledes-cbc
+* EncryptedData using:  
+  * http://www.w3.org/2001/04/xmlenc#aes128-cbc
+  * http://www.w3.org/2001/04/xmlenc#aes256-cbc
+  * http://www.w3.org/2001/04/xmlenc#tripledes-cbc
 
 However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
