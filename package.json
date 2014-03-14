@@ -3,8 +3,7 @@
   "version": "0.4.0",
   "devDependencies": {
     "mocha": "*",
-    "should": "~1.2.2",
-    "ursa": "*"
+    "should": "~1.2.2"
   },
   "main": "./lib",
   "repository": "https://github.com/auth0/node-xml-encryption",
@@ -15,7 +14,8 @@
   ],
   "author": "Matias Woloski (Auth0)",
   "contributors": [
-    "Jose F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)"
+    "Jose F. Romaniello <jfromaniello@gmail.com> (http://joseoncode.com)",
+    "Tommi Pisto <tommi@pistogroup.com> (http://pasm.pis.to)"
   ],
   "license": "MIT",
   "dependencies": {

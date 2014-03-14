@@ -14,7 +14,7 @@ var xmlenc = require('xmlenc');
 var options = {
   rsa_pub: fs.readFileSync(__dirname + '/your_rsa.pub'),
   pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
-  encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes-256-cbc',
+  encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
   keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
 };
 
@@ -66,7 +66,15 @@ decrypted content
 
 Currently the library supports:
 
-* EncryptedKey to transport symmetric key using http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
-* EncryptedData using http://www.w3.org/2001/04/xmlenc#aes-256-cbc
+* EncryptedKey to transport symmetric key using:
+  
+  http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
+  http://www.w3.org/2001/04/xmlenc#rsa-1_5
+
+* EncryptedData using:
+  
+  http://www.w3.org/2001/04/xmlenc#aes128-cbc
+  http://www.w3.org/2001/04/xmlenc#aes256-cbc
+  http://www.w3.org/2001/04/xmlenc#tripledes-cbc
 
 However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
