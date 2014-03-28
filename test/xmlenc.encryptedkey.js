@@ -98,4 +98,13 @@ describe('encrypt', function() {
     });
   });
 
+  it('should decrypt xml with odd padding (aes256-cbc)', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function(err, decrypted) {
+      assert.ifError(err);
+      assert.equal(decrypted, 'content');
+      done();
+    });
+  });
+
 });
