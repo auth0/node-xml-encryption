@@ -5,7 +5,6 @@ var assert = require('assert'),
 var crypto = require('crypto');
 var xmldom = require('xmldom');
 var xpath = require('xpath');
-var ursa = require('ursa');
 
 describe('integration', function() {
 
