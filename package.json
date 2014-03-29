@@ -1,6 +1,6 @@
 {
   "name": "xml-encryption",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "devDependencies": {
     "mocha": "*",
     "should": "~1.2.2"
