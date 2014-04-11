@@ -41,12 +41,36 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
     };
 
     xmlenc.encrypt('content to encrypt', options, function (err, result) {
-      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function (err, decrypted) {
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), autopadding: true }, function (err, decrypted) {
         assert.equal(decrypted, 'content to encrypt');
+        done();
+      });
+    });
+  });
+
+  it('should encrypt and decrypt xml (aes128-cbc) return right padding', function (done) {
+    // cert created with:
+    // openssl req -x509 -new -newkey rsa:2048 -nodes -subj '/CN=auth0.auth0.com/O=Auth0 LLC/C=US/ST=Washington/L=Redmond' -keyout auth0.key -out auth0.pem
+    // pub key extracted from (only the RSA public key between BEGIN PUBLIC KEY and END PUBLIC KEY)
+    // openssl x509 -in "test-auth0.pem" -pubkey 
+
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+    };
+
+    xmlenc.encrypt('content  encrypt', options, function (err, result) {
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), autopadding: false }, function (err, decrypted) {
+        assert.equal(decrypted.charCodeAt(decrypted.length - 1), 0x10);
+        decrypted = decrypted.substr(0, decrypted.length - decrypted.charCodeAt(decrypted.length - 1));
+        assert.equal(decrypted, 'content  encrypt');
         done();
       });
     });
