@@ -141,4 +141,12 @@ describe('encrypt', function() {
     });
   });
 
+  it('should catch error if padding length > 16', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-padding-length.xml').toString();
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function(err, decrypted) {
+      assert(err);
+      done();
+    });
+  });
+
 });
