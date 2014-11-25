@@ -76,3 +76,7 @@ Currently the library supports:
   * http://www.w3.org/2001/04/xmlenc#tripledes-cbc
 
 However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
+
+## Issue Reporting
+
+If you have found a bug or if you have a feature request, please report them at this repository issues section. Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
