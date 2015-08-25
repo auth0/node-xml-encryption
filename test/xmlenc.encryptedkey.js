@@ -19,7 +19,7 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     xmlenc.encrypt('content to encrypt', options, function(err, result) {  
@@ -41,7 +41,7 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     xmlenc.encrypt('Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge', options, function(err, result) {  
@@ -63,7 +63,7 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     xmlenc.encrypt('Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge Gnügge', options, function (err, result) {
@@ -80,7 +80,7 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     xmlenc.encrypt('content to encrypt', options, function (err, result) {
@@ -102,7 +102,7 @@ describe('encrypt', function() {
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc',
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
     };
 
     xmlenc.encrypt('content to encrypt', options, function(err, result) {  
@@ -117,7 +117,7 @@ describe('encrypt', function() {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
-      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
     crypto.randomBytes(32, function(err, randomBytes) {

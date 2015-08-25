@@ -15,7 +15,7 @@ var options = {
   rsa_pub: fs.readFileSync(__dirname + '/your_rsa.pub'),
   pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
   encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
-  keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+  keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
 };
 
 xmlenc.encrypt('content to encrypt', options, function(err, result) { 
