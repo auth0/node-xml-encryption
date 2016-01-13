@@ -18,7 +18,7 @@ var options = {
   keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
 };
 
-xmlenc.encrypt('content to encrypt', options, function(err, result) { 
+xmlenc.encrypt('content to encrypt', options, function(err, result) {
     console.log(result);
 }
 ~~~
@@ -53,7 +53,7 @@ var options = {
     key: fs.readFileSync(__dirname + '/your_private_key.key'),
 };
 
-xmlenc.decrypt('<xenc:EncryptedData ..... </xenc:EncryptedData>', options, function(err, result) { 
+xmlenc.decrypt('<xenc:EncryptedData ..... </xenc:EncryptedData>', options, function(err, result) {
     console.log(result);
 }
 
@@ -80,3 +80,11 @@ However, you can fork and implement your own algorithm. The code supports adding
 ## Issue Reporting
 
 If you have found a bug or if you have a feature request, please report them at this repository issues section. Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
+
+## Author
+
+[Auth0](auth0.com)
+
+## License
+
+This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more info.
