@@ -9,7 +9,7 @@ W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/
 ### encrypt
 
 ~~~js
-var xmlenc = require('xmlenc');
+var xmlenc = require('xml-encryption');
 
 var options = {
   rsa_pub: fs.readFileSync(__dirname + '/your_rsa.pub'),
@@ -49,6 +49,8 @@ Result:
 ### decrypt
 
 ~~~js
+var xmlenc = require('xml-encryption');
+
 var options = {
     key: fs.readFileSync(__dirname + '/your_private_key.key'),
 };
