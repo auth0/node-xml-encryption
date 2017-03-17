@@ -19,11 +19,11 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "xmldom": "~0.1.15",
-    "ejs": "~0.8.3",
     "async": "~0.2.7",
-    "xpath": "0.0.5",
-    "node-forge": "0.6.38"
+    "ejs": "~0.8.3",
+    "node-forge": "^0.7.0",
+    "xmldom": "~0.1.15",
+    "xpath": "0.0.5"
   },
   "scripts": {
     "test": "mocha"
