@@ -2,7 +2,7 @@
   "name": "xml-encryption",
   "version": "0.11.0",
   "devDependencies": {
-    "mocha": "*",
+    "mocha": "^3.0.0-2",
     "should": "^11.2.1"
   },
   "main": "./lib",
