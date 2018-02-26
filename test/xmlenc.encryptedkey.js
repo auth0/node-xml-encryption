@@ -1,9 +1,6 @@
-var assert = require('assert'),
-    fs = require('fs'),
-    xmlenc = require('../lib');
-
-var crypto = require('crypto');
-var xmldom = require('xmldom');
+var assert = require('assert');
+var fs = require('fs');
+var xmlenc = require('../lib');
 var xpath = require('xpath');
 
 describe('encrypt', function() {
@@ -65,15 +62,18 @@ describe('encrypt', function() {
       keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     };
 
-    crypto.randomBytes(32, function(err, randomBytes) {
-      if (err) return done(err);
-      xmlenc.encryptKeyInfo(randomBytes, options, function(err, result) {
-        if (err) return done(err);
-        var decryptedRandomBytes = xmlenc.decryptKeyInfo(result, { key: fs.readFileSync(__dirname + '/test-auth0.key')});
+    var plaintext = 'The quick brown fox jumps over the lazy dog';
 
-        assert.equal(new Buffer(randomBytes).toString('base64'), new Buffer(decryptedRandomBytes).toString('base64'));
-        done();
-      });
+    xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
+      if (err) return done(err);
+
+      var decryptedKeyInfo = xmlenc.decryptKeyInfo(
+        encryptedKeyInfo,
+        {key: fs.readFileSync(__dirname + '/test-auth0.key')}
+      );
+      assert.equal(decryptedKeyInfo.toString(), plaintext);
+
+      done();
     });
   });
 
