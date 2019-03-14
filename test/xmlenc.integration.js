@@ -3,7 +3,7 @@ var assert = require('assert'),
     xmlenc = require('../lib');
 
 var crypto = require('crypto');
-var xmldom = require('xmldom');
+var xmldom = require('xmldom-reborn');
 var xpath = require('xpath');
 
 describe('integration', function() {
