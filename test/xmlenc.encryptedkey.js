@@ -55,6 +55,45 @@ describe('encrypt', function() {
     });
   }
 
+  describe('des-ede3-cbc fails', function() {
+    it('should fail encryption when disallowInsecureEncryptionAlgorithm is set', function(done) {
+      const options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      disallowInsecureEncryptionAlgorithm: true,
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+    }
+      //options.encryptionAlgorithm = 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc',
+      //options.keyEncryptionAlgorighm = 'http://www.w3.org/2001/04/xmlenc#rsa-1_5';
+      xmlenc.encrypt('encrypt me', options, function(err, result) {
+        assert(err);
+        done();
+      });
+    });
+
+    it('should fail decryption when disallowInsecureDecryptionAlgorithm is set', function(done) {
+      const options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+      }
+      xmlenc.encrypt('encrypt me', options, function(err, result) {
+        xmlenc.decrypt(result,
+          { key: fs.readFileSync(__dirname + '/test-auth0.key'),
+            disallowInsecureDecryptionAlgorithm: true},
+          function (err, decrypted) {
+            assert(err);
+            done();
+        });
+      });
+    });
+  });
+
+
   it('should encrypt and decrypt keyinfo', function (done) {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
@@ -94,4 +133,43 @@ describe('encrypt', function() {
     });
   });
 
+  it('should fail encrypt when disallowInsecureDecryptionAlgorithm is set', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5',
+      disallowInsecureEncryptionAlgorithm: true
+    };
+
+    var plaintext = 'The quick brown fox jumps over the lazy dog';
+
+    xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
+      assert(err);
+      done();
+    });
+  });
+
+  it('should encrypt and fail decrypt due to insecure algorithms', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      keyEncryptionAlgorighm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+    };
+
+    var plaintext = 'The quick brown fox jumps over the lazy dog';
+
+    xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
+      if (err) return done(err);
+
+      assert.throws(
+        function(){xmlenc.decryptKeyInfo(
+          encryptedKeyInfo,
+          {key: fs.readFileSync(__dirname + '/test-auth0.key'),
+          disallowDecryptionWithInsecureAlgorithm: true})},
+        Error,
+        "Error thrown due to disallowing insecure algorithms.");
+
+      done();
+    });
+  });
 });
