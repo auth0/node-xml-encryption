@@ -2,6 +2,8 @@
 
 W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/)
 
+Supports node >= 8
+
 ## Usage
 
     npm install xml-encryption
