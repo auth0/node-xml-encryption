@@ -56,12 +56,12 @@ describe('encrypt', function() {
   }
 
   describe('des-ede3-cbc fails', function() {
-    it('should fail encryption when disallowInsecureEncryptionAlgorithm is set', function(done) {
+    it('should fail encryption when disallowEncryptionWithInsecureAlgorithm is set', function(done) {
       const options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       key: fs.readFileSync(__dirname + '/test-auth0.key'),
-      disallowInsecureEncryptionAlgorithm: true,
+      disallowEncryptionWithInsecureAlgorithm: true,
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
       keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     }
@@ -73,7 +73,7 @@ describe('encrypt', function() {
       });
     });
 
-    it('should fail decryption when disallowInsecureDecryptionAlgorithm is set', function(done) {
+    it('should fail decryption when disallowDecryptionWithInsecureAlgorithm is set', function(done) {
       const options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
@@ -84,7 +84,7 @@ describe('encrypt', function() {
       xmlenc.encrypt('encrypt me', options, function(err, result) {
         xmlenc.decrypt(result,
           { key: fs.readFileSync(__dirname + '/test-auth0.key'),
-            disallowInsecureDecryptionAlgorithm: true},
+            disallowDecryptionWithInsecureAlgorithm: true},
           function (err, decrypted) {
             assert(err);
             done();
@@ -133,12 +133,12 @@ describe('encrypt', function() {
     });
   });
 
-  it('should fail encrypt when disallowInsecureDecryptionAlgorithm is set', function (done) {
+  it('should fail encrypt when disallowDecryptionWithInsecureAlgorithm is set', function (done) {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
       keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5',
-      disallowInsecureEncryptionAlgorithm: true
+      disallowEncryptionWithInsecureAlgorithm: true
     };
 
     var plaintext = 'The quick brown fox jumps over the lazy dog';

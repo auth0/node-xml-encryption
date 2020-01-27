@@ -16,7 +16,7 @@ var options = {
   pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
   encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
   keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
-  disallowInsecureEncryptionAlgorithm: true
+  disallowEncryptionWithInsecureAlgorithm: true
 };
 
 xmlenc.encrypt('content to encrypt', options, function(err, result) {
@@ -52,7 +52,7 @@ Result:
 ~~~js
 var options = {
     key: fs.readFileSync(__dirname + '/your_private_key.key'),
-    disallowInsecureDecryptionAlgorithm: true;
+    disallowDecryptionWithInsecureAlgorithm: true;
 };
 
 xmlenc.decrypt('<xenc:EncryptedData ..... </xenc:EncryptedData>', options, function(err, result) {
@@ -77,7 +77,7 @@ Currently the library supports:
   * http://www.w3.org/2001/04/xmlenc#aes256-cbc
   * http://www.w3.org/2001/04/xmlenc#tripledes-cbc (Insecure Algorithm)
 
-Insecure Algorithms can be disabled via disallowInsecureEncryptionAlgorithm/disallowInsecureDecryptionAlgorithm flags when encrypting/decrypting. This flag is off by default in 0.x versions.
+Insecure Algorithms can be disabled via disallowEncryptionWithInsecureAlgorithm/disallowDecryptionWithInsecureAlgorithm flags when encrypting/decrypting. This flag is off by default in 0.x versions.
 
 However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
 
