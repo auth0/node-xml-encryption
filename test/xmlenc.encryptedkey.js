@@ -18,6 +18,18 @@ describe('encrypt', function() {
       keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     }
   }, {
+    name: 'aes-256-gcm',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+    }
+  }, {
+    name: 'aes-128-gcm',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes128-gcm',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+    }
+  }, {
     name: 'des-ede3-cbc',
     encryptionOptions: {
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc',
