@@ -21,6 +21,7 @@
   "dependencies": {
     "escape-html": "^1.0.3",
     "node-forge": "^0.7.0",
+    "sinon": "^9.0.1",
     "xmldom": "~0.1.15",
     "xpath": "0.0.27"
   },
