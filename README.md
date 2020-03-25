@@ -84,6 +84,7 @@ Currently the library supports:
   * http://www.w3.org/2001/04/xmlenc#tripledes-cbc (Insecure Algorithm)
 
 Insecure Algorithms can be disabled via `disallowEncryptionWithInsecureAlgorithm`/`disallowDecryptionWithInsecureAlgorithm` flags when encrypting/decrypting. This flag is off by default in 0.x versions.
+
 A warning will be piped to `stderr` using console.warn() by default when the aforementioned algorithms are used. This can be disabled via the `warnInsecureAlgorithm` flag.
 
 ## Issue Reporting
@@ -97,3 +98,6 @@ If you have found a bug or if you have a feature request, please report them at 
 ## License
 
 This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more info.
+
+## Releases
+Release notes may be found under github release page: https://github.com/auth0/node-xml-encryption/releases
