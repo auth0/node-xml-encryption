@@ -21,7 +21,7 @@
   "license": "MIT",
   "dependencies": {
     "escape-html": "^1.0.3",
-    "node-forge": "^0.7.0",
+    "node-forge": "^0.10.0",
     "xmldom": "~0.1.15",
     "xpath": "0.0.27"
   },
