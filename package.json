@@ -15,7 +15,6 @@
 		"Tommi Pisto <tommi@pistogroup.com> (http://pasm.pis.to)"
 	],
 	"files": ["lib", "package-lock.json"],
-
 	"license": "MIT",
 	"dependencies": {
 		"escape-html": "^1.0.3",
