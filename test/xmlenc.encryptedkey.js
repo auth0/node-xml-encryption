@@ -1,9 +1,19 @@
 var assert = require('assert');
 var fs = require('fs');
+var should = require('should');
+var sinon = require('sinon');
 var xmlenc = require('../lib');
 var xpath = require('xpath');
 
 describe('encrypt', function() {
+  let consoleSpy = null;
+  beforeEach(function() {
+    consoleSpy = sinon.spy(console, 'warn');
+  });
+
+  afterEach(function() {
+    consoleSpy.restore();
+  });
 
   var algorithms = [{
     name: 'aes-256-cbc',
@@ -15,6 +25,18 @@ describe('encrypt', function() {
     name: 'aes-128-cbc',
     encryptionOptions: {
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes128-cbc',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+    }
+  }, {
+    name: 'aes-256-gcm',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
+    }
+  }, {
+    name: 'aes-128-gcm',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes128-gcm',
       keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     }
   }, {
@@ -46,9 +68,10 @@ describe('encrypt', function() {
     options.rsa_pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
     options.pem = fs.readFileSync(__dirname + '/test-auth0.pem'),
     options.key = fs.readFileSync(__dirname + '/test-auth0.key'),
+    options.warnInsecureAlgorithm = false;
 
     xmlenc.encrypt(content, options, function(err, result) {
-      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function (err, decrypted) {
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), warnInsecureAlgorithm: false}, function (err, decrypted) {
         assert.equal(decrypted, content);
         done();
       });
@@ -68,6 +91,8 @@ describe('encrypt', function() {
       xmlenc.encrypt('encrypt me', options, function(err, result) {
         assert(err);
         assert(!result);
+        //should not pop up warns due to options.warnInsecureAlgorithm = false;
+        consoleSpy.called.should.equal(false);
         done();
       });
     });
@@ -180,7 +205,6 @@ describe('encrypt', function() {
     };
 
     var plaintext = 'The quick brown fox jumps over the lazy dog';
-
     xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
       assert(err);
       done();
@@ -198,7 +222,7 @@ describe('encrypt', function() {
 
     xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
       if (err) return done(err);
-
+      consoleSpy.called.should.equal(true);
       assert.throws(
         function(){xmlenc.decryptKeyInfo(
           encryptedKeyInfo,
