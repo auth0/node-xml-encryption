@@ -18,7 +18,8 @@ var options = {
   pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
   encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
   keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
-  disallowEncryptionWithInsecureAlgorithm: true
+  disallowEncryptionWithInsecureAlgorithm: true,
+  warnInsecureAlgorithm: true
 };
 
 xmlenc.encrypt('content to encrypt', options, function(err, result) {
@@ -54,7 +55,8 @@ Result:
 ~~~js
 var options = {
     key: fs.readFileSync(__dirname + '/your_private_key.key'),
-    disallowDecryptionWithInsecureAlgorithm: true;
+    disallowDecryptionWithInsecureAlgorithm: true,
+    warnInsecureAlgorithm: true
 };
 
 xmlenc.decrypt('<xenc:EncryptedData ..... </xenc:EncryptedData>', options, function(err, result) {
@@ -77,11 +79,13 @@ Currently the library supports:
 * EncryptedData using:
   * http://www.w3.org/2001/04/xmlenc#aes128-cbc
   * http://www.w3.org/2001/04/xmlenc#aes256-cbc
+  * http://www.w3.org/2009/xmlenc11#aes128-gcm
+  * http://www.w3.org/2009/xmlenc11#aes256-gcm
   * http://www.w3.org/2001/04/xmlenc#tripledes-cbc (Insecure Algorithm)
 
-Insecure Algorithms can be disabled via disallowEncryptionWithInsecureAlgorithm/disallowDecryptionWithInsecureAlgorithm flags when encrypting/decrypting. This flag is off by default in 0.x versions.
+Insecure Algorithms can be disabled via `disallowEncryptionWithInsecureAlgorithm`/`disallowDecryptionWithInsecureAlgorithm` flags when encrypting/decrypting. This flag is off by default in 0.x versions.
 
-However, you can fork and implement your own algorithm. The code supports adding more algorithms easily
+A warning will be piped to `stderr` using console.warn() by default when the aforementioned algorithms are used. This can be disabled via the `warnInsecureAlgorithm` flag.
 
 ## Issue Reporting
 
@@ -94,3 +98,6 @@ If you have found a bug or if you have a feature request, please report them at 
 ## License
 
 This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more info.
+
+## Releases
+Release notes may be found under github release page: https://github.com/auth0/node-xml-encryption/releases
