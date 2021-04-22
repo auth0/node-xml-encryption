@@ -1,6 +1,6 @@
 {
   "name": "xml-encryption",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "devDependencies": {
     "mocha": "^7.1.2",
     "should": "^11.2.1",
@@ -25,7 +25,10 @@
     "xmldom": "~0.6.0",
     "xpath": "0.0.32"
   },
-  "files": ["lib", "package-lock.json"],
+  "files": [
+    "lib",
+    "package-lock.json"
+  ],
   "scripts": {
     "test": "mocha"
   },
