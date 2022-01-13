@@ -2,7 +2,7 @@
 
 W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/)
 
-Supports node >= 8
+Supports node >= 12
 
 ## Usage
 
