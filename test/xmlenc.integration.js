@@ -18,4 +18,16 @@ describe('integration', function() {
     });
   });
 
+  it('should decrypt Okta assertion', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-okta-enc-response.xml').toString()
+    xmlenc.decrypt(
+      encryptedContent,
+      {key: fs.readFileSync(__dirname + '/test-okta.pem')},
+      (err, res) => {
+        assert.ifError(err);
+  
+        done();    
+      }
+    );
+  });
 });
