@@ -1,6 +1,6 @@
 ---
 version: 1
 repository:
-  owner: product_security_engineering
+  owner: iam_protocols
   tier:
   tags:
