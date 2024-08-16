@@ -20,7 +20,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.5",
+    "@xmldom/xmldom": "^0.8.7",
     "escape-html": "^1.0.3",
     "xpath": "0.0.32"
   },
