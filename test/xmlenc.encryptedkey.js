@@ -1,9 +1,7 @@
 var assert = require('assert');
 var fs = require('fs');
-var should = require('should');
 var sinon = require('sinon');
 var xmlenc = require('../lib');
-var xpath = require('xpath');
 
 describe('encrypt', function() {
   let consoleSpy = null;
@@ -39,6 +37,21 @@ describe('encrypt', function() {
       encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes128-gcm',
       keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     }
+  },
+  {
+    name: 'aes-128-gcm with sha256',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes128-gcm',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+      keyEncryptionDigest: 'sha256'
+    }
+  }, {
+    name: 'aes-128-gcm with sha512',
+    encryptionOptions: {
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes128-gcm',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+      keyEncryptionDigest: 'sha512'
+    }
   }, {
     name: 'des-ede3-cbc',
     encryptionOptions: {
@@ -72,6 +85,7 @@ describe('encrypt', function() {
 
     xmlenc.encrypt(content, options, function(err, result) {
       xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), warnInsecureAlgorithm: false}, function (err, decrypted) {
+        if (err) return done(err);
         assert.equal(decrypted, content);
         done();
       });
@@ -92,7 +106,7 @@ describe('encrypt', function() {
         assert(err);
         assert(!result);
         //should not pop up warns due to options.warnInsecureAlgorithm = false;
-        consoleSpy.called.should.equal(false);
+        assert.equal(consoleSpy.called, false);
         done();
       });
     });
@@ -222,7 +236,7 @@ describe('encrypt', function() {
 
     xmlenc.encryptKeyInfo(plaintext, options, function(err, encryptedKeyInfo) {
       if (err) return done(err);
-      consoleSpy.called.should.equal(true);
+      assert.equal(consoleSpy.called, true);
       assert.throws(
         function(){xmlenc.decryptKeyInfo(
           encryptedKeyInfo,

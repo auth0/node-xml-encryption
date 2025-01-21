@@ -1,10 +1,8 @@
 [![Build Status](https://travis-ci.org/auth0/node-xml-encryption.png)](https://travis-ci.org/auth0/node-xml-encryption)
 
-W3C XML Encryption implementation for node.js (http://www.w3.org/TR/xmlenc-core/)
+W3C XML Encryption implementation for Node.js (http://www.w3.org/TR/xmlenc-core/)
 
-Supports node >= 12 < 18
-
-node 18 not supported due to https://github.com/nodejs/node/issues/52017 for Triple DES algorithms.
+Node 18+ does not support Triple DES algorithms due to https://github.com/nodejs/node/issues/52017
 
 ## Usage
 
@@ -20,6 +18,7 @@ var options = {
   pem: fs.readFileSync(__dirname + '/your_public_cert.pem'),
   encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
   keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+  keyEncryptionDigest: 'sha1',
   disallowEncryptionWithInsecureAlgorithm: true,
   warnInsecureAlgorithm: true
 };
