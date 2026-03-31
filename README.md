@@ -78,15 +78,32 @@ Currently the library supports:
   * http://www.w3.org/2001/04/xmlenc#rsa-1_5 (Insecure Algorithm)
 
 * EncryptedData using:
-  * http://www.w3.org/2001/04/xmlenc#aes128-cbc
-  * http://www.w3.org/2001/04/xmlenc#aes256-cbc
+  * http://www.w3.org/2001/04/xmlenc#aes128-cbc (Insecure Algorithm)
+  * http://www.w3.org/2001/04/xmlenc#aes256-cbc (Insecure Algorithm)
   * http://www.w3.org/2009/xmlenc11#aes128-gcm
   * http://www.w3.org/2009/xmlenc11#aes256-gcm
   * http://www.w3.org/2001/04/xmlenc#tripledes-cbc (Insecure Algorithm)
 
-Insecure Algorithms can be disabled via `disallowEncryptionWithInsecureAlgorithm`/`disallowDecryptionWithInsecureAlgorithm` flags when encrypting/decrypting. This flag is off by default in 0.x versions.
+Insecure Algorithms can be used via `disallowEncryptionWithInsecureAlgorithm`/`disallowDecryptionWithInsecureAlgorithm` flags when encrypting/decrypting by setting them to false. In version 4.0 onwards, these flags are true by default (forbidding insecure algorithms).
 
-A warning will be piped to `stderr` using console.warn() by default when the aforementioned algorithms are used. This can be disabled via the `warnInsecureAlgorithm` flag.
+A warning will be piped to `stderr` using console.warn() by default when the aforementioned algorithms are used and above mentioned flags are false. This can be disabled via the `warnInsecureAlgorithm` flag.
+
+We recommend usage of AES-256-GCM (Galois/Counter Mode) for the strongest security posture and to align with current industry best practices.
+
+Note that `xml-encryption` versions prior to 4.0 supported AES-128-CBC and AES-256-CBC as secure algorithms. In version 4.0 onwards, these are treated as insecure because they use the Cipher Block Chaining (CBC) mode of encryption, which does not provide integrity guarantees. To continue using AES128-CBC and AES256-CBC, enable support for insecure algorithms via `disallowEncryptionWithInsecureAlgorithm/disallowDecryptionWithInsecureAlgorithm`.
+
+### Allow listing specific algorithms when decrypting
+
+If decrypting with `disallowEncryptionWithInsecureAlgorithm: true`, you may wish to only support a subset of insecure algorithms (for example, supporting AES-256-CBC only). This can be achieved by extracting the encryption algorithm using the following code and applying validation as required.
+
+~~~js
+const xmldom  = require('@xmldom/xmldom');
+const xpath   = require('xpath');
+
+const doc = new xmldom.DOMParser().parseFromString(xmlString);
+const encryptionMethod = xpath.select("//*[local-name(.)='EncryptedData']/*[local-name(.)='EncryptionMethod']", doc)[0];
+const encryptionAlgorithm = encryptionMethod.getAttribute('Algorithm');
+~~~
 
 ## Issue Reporting
 

@@ -11,7 +11,7 @@ describe('integration', function() {
   it('should decrypt assertion with aes128', function (done) {
     var result = fs.readFileSync(__dirname + '/assertion-sha1-128.xml').toString();
 
-    xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-cbc128.key')}, function (err, decrypted) {
+    xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-cbc128.key'), disallowDecryptionWithInsecureAlgorithm: false }, function (err, decrypted) {
       // decrypted content should finish with <saml2:Assertion>
       assert.equal(/<\/saml2:Assertion>$/.test(decrypted), true);
       done();
@@ -22,7 +22,7 @@ describe('integration', function() {
     var encryptedContent = fs.readFileSync(__dirname + '/test-okta-enc-response.xml').toString()
     xmlenc.decrypt(
       encryptedContent,
-      {key: fs.readFileSync(__dirname + '/test-okta.pem')},
+      {key: fs.readFileSync(__dirname + '/test-okta.pem'), disallowDecryptionWithInsecureAlgorithm: false},
       (err, res) => {
         assert.ifError(err);
   
