@@ -56,7 +56,7 @@ describe('encrypt', function() {
     name: 'des-ede3-cbc',
     encryptionOptions: {
       encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#tripledes-cbc',
-      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p'
     }
   }];
 
@@ -83,8 +83,15 @@ describe('encrypt', function() {
     options.key = fs.readFileSync(__dirname + '/test-auth0.key'),
     options.warnInsecureAlgorithm = false;
 
+    const disallowInsecureAlgorithm = ![
+      'http://www.w3.org/2001/04/xmlenc#tripledes-cbc',
+      'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
+      'http://www.w3.org/2001/04/xmlenc#aes128-cbc'
+    ].includes(options?.encryptionAlgorithm);
+    options.disallowEncryptionWithInsecureAlgorithm = disallowInsecureAlgorithm;
+
     xmlenc.encrypt(content, options, function(err, result) {
-      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), warnInsecureAlgorithm: false}, function (err, decrypted) {
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key'), warnInsecureAlgorithm: false, disallowDecryptionWithInsecureAlgorithm: disallowInsecureAlgorithm }, function (err, decrypted) {
         if (err) return done(err);
         assert.equal(decrypted, content);
         done();
@@ -93,7 +100,7 @@ describe('encrypt', function() {
   }
 
   describe('des-ede3-cbc fails', function() {
-    it('should fail encryption when disallowEncryptionWithInsecureAlgorithm is set', function(done) {
+    it('should fail encryption when disallowEncryptionWithInsecureAlgorithm is set to true', function(done) {
       const options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
@@ -133,7 +140,7 @@ describe('encrypt', function() {
   });
 
   describe('rsa-1.5 fails', function() {
-    it('should fail encryption when disallowEncryptionWithInsecureAlgorithm is set', function(done) {
+    it('should fail encryption when disallowEncryptionWithInsecureAlgorithm is set to true', function(done) {
       const options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
@@ -195,7 +202,7 @@ describe('encrypt', function() {
 
   it('should decrypt xml with odd padding (aes256-cbc)', function (done) {
     var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
-    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key')}, function(err, decrypted) {
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key'), disallowDecryptionWithInsecureAlgorithm: false }, function(err, decrypted) {
       assert.ifError(err);
       assert.equal(decrypted, 'content');
       done();
@@ -210,7 +217,7 @@ describe('encrypt', function() {
     });
   });
 
-  it('should fail encrypt when disallowEncryptionWithInsecureAlgorithm is set', function (done) {
+  it('should fail encrypt when disallowEncryptionWithInsecureAlgorithm is set to true', function (done) {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
@@ -229,7 +236,8 @@ describe('encrypt', function() {
     var options = {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
-      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5'
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-1_5',
+      disallowEncryptionWithInsecureAlgorithm: false,
     };
 
     var plaintext = 'The quick brown fox jumps over the lazy dog';
@@ -245,6 +253,75 @@ describe('encrypt', function() {
         Error,
         "Error thrown due to disallowing insecure algorithms.");
 
+      done();
+    });
+  });
+
+  it('should fail decrypt due to insecure algorithm (aes256-cbc)', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key'), disallowDecryptionWithInsecureAlgorithm: true }, function(err, decrypted) {
+      assert(err);
+      done();
+    });
+  });
+
+  it('should decrypt with insecure algorithm (aes256-cbc) with warning when disallowDecryptionWithInsecureAlgorithm is false', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key'), disallowDecryptionWithInsecureAlgorithm: false, warnInsecureAlgorithm: true }, function(err, decrypted) {
+      assert.ifError(err);
+      assert.equal(consoleSpy.called, true);
+      assert.equal(decrypted, 'content');
+      done();
+    });
+  });
+
+  it('should decrypt with insecure algorithm (aes256-cbc) without warning when disallowDecryptionWithInsecureAlgorithm is false', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key'), disallowDecryptionWithInsecureAlgorithm: false, warnInsecureAlgorithm: false }, function(err, decrypted) {
+      assert.ifError(err);
+      assert.equal(consoleSpy.called, false);
+      assert.equal(decrypted, 'content');
+      done();
+    });
+  });
+
+  it('should fail decrypt with insecure algorithm (aes256-cbc)', function (done) {
+    var encryptedContent = fs.readFileSync(__dirname + '/test-cbc256-padding.xml').toString()
+    xmlenc.decrypt(encryptedContent, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function(err, decrypted) {
+      assert(err);
+      done();
+    });
+  });
+
+  it('should fail encrypt due to insecure algorithm (aes256-cbc)', function (done) {
+    const options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+    }
+    xmlenc.encrypt('encrypt', options, function(err, result) {
+      assert(err);
+      assert(!result);
+      done();
+    });
+  });
+
+  it('should encrypt with insecure algorithm (aes256-cbc) when disallowEncryptionWithInsecureAlgorithm is false', function (done) {
+    const options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      key: fs.readFileSync(__dirname + '/test-auth0.key'),
+      encryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#aes256-cbc',
+      keyEncryptionAlgorithm: 'http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p',
+      disallowEncryptionWithInsecureAlgorithm: false,
+      warnInsecureAlgorithm: true
+    }
+    xmlenc.encrypt('encrypt', options, function(err, result) {
+      assert.ifError(err);
+      assert.equal(consoleSpy.called, true);
+      assert(result);
       done();
     });
   });
