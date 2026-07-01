@@ -39,11 +39,6 @@ describe('keyEncryptionDigest', function () {
       assert(xml.includes('<DigestMethod Algorithm="' + custom + '" />'));
     });
 
-    it('includes a DigestMethod for RSA-OAEP', function () {
-      var xml = render({ keyEncryptionMethod: RSA_OAEP, keyEncryptionDigest: 'sha256' });
-      assert(xml.includes('<DigestMethod'));
-    });
-
     it('does NOT include a DigestMethod for RSA-1.5', function () {
       var xml = render({ keyEncryptionMethod: RSA_1_5, keyEncryptionDigest: 'sha256' });
       assert(!xml.includes('<DigestMethod'));
@@ -78,6 +73,16 @@ describe('keyEncryptionDigest', function () {
       });
     });
 
+    it('emits the correct xmldsig URI in the produced XML for sha1', function (done) {
+      var options = baseOptions();
+      options.keyEncryptionDigest = 'sha1';
+      xmlenc.encrypt('content', options, function (err, result) {
+        if (err) return done(err);
+        assert(result.includes('http://www.w3.org/2000/09/xmldsig#sha1'));
+        done();
+      });
+    });
+
     it('emits the correct xmlenc URI in the produced XML for sha256', function (done) {
       var options = baseOptions();
       options.keyEncryptionDigest = 'sha256';
@@ -85,6 +90,17 @@ describe('keyEncryptionDigest', function () {
         if (err) return done(err);
         assert(result.includes('http://www.w3.org/2001/04/xmlenc#sha256'));
         assert(!result.includes('http://www.w3.org/2000/09/xmldsig#sha256'));
+        done();
+      });
+    });
+
+    it('emits the correct xmlenc URI in the produced XML for sha512', function (done) {
+      var options = baseOptions();
+      options.keyEncryptionDigest = 'sha512';
+      xmlenc.encrypt('content', options, function (err, result) {
+        if (err) return done(err);
+        assert(result.includes('http://www.w3.org/2001/04/xmlenc#sha512'));
+        assert(!result.includes('http://www.w3.org/2000/09/xmldsig#sha512'));
         done();
       });
     });
