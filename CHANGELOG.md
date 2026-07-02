@@ -1,3 +1,14 @@
+## [5.0.0](https://github.com/auth0/node-xml-encryption/compare/v4.0.1...v5.0.0) (2026-07-02)
+
+### ⚠ BREAKING CHANGES
+
+* DigestMethod is not used when keyEncryptionAlgorithm is RSA 1.5 so has been removed from the encrypted payload
+* keyEncryptionDigest values of sha256 or sha512 correctly use the `http://www.w3.org/2001/04/xmlenc` namespace when encrypting 
+
+### Bug Fixes
+
+* correct digest method and digest method algorithm id ([#136](https://github.com/auth0/node-xml-encryption/issues/136)) ([586edd3](https://github.com/auth0/node-xml-encryption/commit/586edd3e3fdc9783f108921036808a0ee54202d7))
+
 ## [4.0.1](https://github.com/auth0/node-xml-encryption/compare/v4.0.0...v4.0.1) (2026-06-25)
 
 ### Bug Fixes
