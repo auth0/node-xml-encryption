@@ -25,7 +25,7 @@ var options = {
 
 xmlenc.encrypt('content to encrypt', options, function(err, result) {
     console.log(result);
-}
+})
 ~~~
 
 Result:
