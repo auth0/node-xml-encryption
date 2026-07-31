@@ -292,7 +292,7 @@ describe('rsa-oaep-mgf1p emits MGF1-sha1 ciphertext', function () {
 
         // Unwrap with MGF1-sha1: succeeds only if encrypt used the spec MGF.
         var withSha1 = oaep.privateDecryptOaep(fs.readFileSync(__dirname + '/test-auth0.key'), wrapped, { oaepHash: digest, mgf1Hash: 'sha1' });
-        assert(withSha1.length > 0);
+        assert.equal(withSha1.length, 32);
 
         // And the old non-spec MGF1=digest must no longer parse.
         assert.throws(function () {
@@ -313,7 +313,9 @@ describe('rsa-oaep-mgf1p emits MGF1-sha1 ciphertext', function () {
     };
     xmlenc.encrypt('x', options, function (err, result) {
       if (err) return done(err);
-      assert(!/MGF/.test(result), 'MGF element must not be present with mgf1p');
+      var doc = new xmldom.DOMParser().parseFromString(result);
+      var mgf = xpath.select("//*[local-name(.)='EncryptedKey']/*[local-name(.)='EncryptionMethod']/*[local-name(.)='MGF']", doc);
+      assert.equal(mgf.length, 0, 'MGF element must not be present with mgf1p');
       done();
     });
   });
