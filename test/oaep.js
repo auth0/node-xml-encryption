@@ -205,5 +205,40 @@ describe('oaep', function () {
         oaep.privateDecryptOaep(key, ct, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
       }, /oaep decoding error/);
     });
+
+    it('produces distinct ciphertexts for identical plaintexts (randomized seed)', function () {
+      var msg = Buffer.from('same message');
+      var ciphertexts = [];
+      for (var i = 0; i < 20; i++) {
+        ciphertexts.push(oaep.publicEncryptOaep(pub, msg, { oaepHash: 'sha256', mgf1Hash: 'sha1' }));
+      }
+      // All ciphertexts should be distinct.
+      for (var j = 0; j < ciphertexts.length; j++) {
+        for (var k = j + 1; k < ciphertexts.length; k++) {
+          assert.notEqual(Buffer.compare(ciphertexts[j], ciphertexts[k]), 0,
+            'ciphertext ' + j + ' and ' + k + ' should differ');
+        }
+      }
+    });
+
+    it('randomizes the padding seed itself (not just RSA randomness)', function () {
+      var msg = Buffer.from('test');
+      var seeds = [];
+      var hLen = crypto.createHash('sha256').digest().length;
+      for (var i = 0; i < 20; i++) {
+        var ct = oaep.publicEncryptOaep(pub, msg, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+        // Recover EM = 0x00 || maskedSeed || maskedDB via raw RSA decrypt (no padding).
+        var em = crypto.privateDecrypt({ key: key, padding: crypto.constants.RSA_NO_PADDING }, ct);
+        var maskedSeed = em.subarray(1, 1 + hLen);
+        seeds.push(maskedSeed);
+      }
+      // All maskedSeed values should be distinct.
+      for (var j = 0; j < seeds.length; j++) {
+        for (var k = j + 1; k < seeds.length; k++) {
+          assert.notEqual(Buffer.compare(seeds[j], seeds[k]), 0,
+            'maskedSeed ' + j + ' and ' + k + ' should differ');
+        }
+      }
+    });
   });
 });
