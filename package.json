@@ -10,7 +10,8 @@
     "husky": "^9.1.7",
     "mocha": "^7.1.2",
     "semantic-release": "^25.0.2",
-    "sinon": "^9.0.2"
+    "sinon": "^9.0.2",
+    "xpath": "0.0.32"
   },
   "main": "./lib",
   "repository": "https://github.com/auth0/node-xml-encryption",
@@ -27,8 +28,7 @@
   "license": "MIT",
   "dependencies": {
     "@xmldom/xmldom": "^0.8.13",
-    "escape-html": "^1.0.3",
-    "xpath": "0.0.32"
+    "escape-html": "^1.0.3"
   },
   "files": [
     "lib",
