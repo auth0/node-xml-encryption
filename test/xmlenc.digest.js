@@ -150,3 +150,56 @@ describe('keyEncryptionDigest', function () {
     });
   });
 });
+
+describe('DigestMethod resolution with RetrievalMethod', function () {
+  var xpath = require('xpath');
+  var xmldom = require('@xmldom/xmldom');
+
+  it('finds the DigestMethod when EncryptedKey is outside KeyInfo', function () {
+    var doc = new xmldom.DOMParser().parseFromString(
+      fs.readFileSync(__dirname + '/test-okta-enc-response.xml', 'utf8')
+    );
+    // The pre-fix XPath, anchored under KeyInfo/EncryptedKey, finds nothing here.
+    var anchored = xpath.select(
+      "//*[local-name(.)='KeyInfo']/*[local-name(.)='EncryptedKey']/*[local-name(.)='EncryptionMethod']/*[local-name(.)='DigestMethod']",
+      doc
+    );
+    assert.equal(anchored.length, 0, 'fixture must exercise the RetrievalMethod shape');
+
+    // Resolving relative to the EncryptedKey's own EncryptionMethod does find it.
+    var relative = xpath.select(
+      "//*[local-name(.)='EncryptedKey']/*[local-name(.)='EncryptionMethod']/*[local-name(.)='DigestMethod']",
+      doc
+    );
+    assert.equal(relative.length, 1);
+    assert.equal(relative[0].getAttribute('Algorithm'), 'http://www.w3.org/2000/09/xmldsig#sha1');
+  });
+
+  it('decrypts a RetrievalMethod document whose DigestMethod is sha256', function (done) {
+    // Build the RetrievalMethod shape with a sha256 digest, which the anchored
+    // XPath would misread as sha1.
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP,
+      keyEncryptionDigest: 'sha256'
+    };
+    xmlenc.encrypt('retrieval method content', options, function (err, result) {
+      if (err) return done(err);
+      // Move EncryptedKey out of KeyInfo and point at it with a RetrievalMethod.
+      var m = /<e:EncryptedKey[\s\S]*<\/e:EncryptedKey>/.exec(result);
+      assert(m, 'expected an EncryptedKey element');
+      var encryptedKey = m[0].replace('<e:EncryptedKey', '<e:EncryptedKey Id="ek1"');
+      var rewritten = result
+        .replace(m[0], '<RetrievalMethod URI="#ek1" />')
+        .replace('</xenc:EncryptedData>', encryptedKey + '</xenc:EncryptedData>');
+
+      xmlenc.decrypt(rewritten, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'retrieval method content');
+        done();
+      });
+    });
+  });
+});
