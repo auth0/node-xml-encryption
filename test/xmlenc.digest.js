@@ -415,6 +415,19 @@ describe('xmlenc11#rsa-oaep with explicit MGF', function () {
     assert.equal(Buffer.compare(Buffer.from(recovered), sym), 0);
   });
 
+  it('never emits the MGF1withSHA1 alias it accepts on decrypt', function () {
+    // The alias is decrypt-only: it is not in 5.5.2's normative list, so emitting
+    // it would send a non-normative URI to peers. The emit map is derived from the
+    // canonical list alone, which is what makes this hold.
+    var mgf = require('../lib/mgf-algorithms');
+    assert.equal(mgf.MGF_URI_FOR_EMIT['sha1'], 'http://www.w3.org/2009/xmlenc11#mgf1sha1');
+    assert.equal(mgf.MGF_ALGORITHMS['http://www.w3.org/2001/04/xmlenc#MGF1withSHA1'], 'sha1');
+    Object.keys(mgf.MGF_URI_FOR_EMIT).forEach(function (shortName) {
+      assert(mgf.MGF_URI_FOR_EMIT[shortName].indexOf('http://www.w3.org/2009/xmlenc11#mgf1') === 0,
+        shortName + ' must emit a normative xmlenc11 URI, got ' + mgf.MGF_URI_FOR_EMIT[shortName]);
+    });
+  });
+
   it('rejects keyEncryptionMgf under mgf1p instead of silently ignoring it', function (done) {
     xmlenc.encrypt('x', {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
