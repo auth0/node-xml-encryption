@@ -246,4 +246,75 @@ describe('rsa-oaep-mgf1p pins MGF1 to sha1', function () {
       xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
     }, /oaep decoding error/);
   });
+
+  it('decrypts the external OpenSSL vector through the public API', function () {
+    // VECTOR from test/oaep.js (originally from repro-oaep-mgf1.cjs): OpenSSL OAEP(sha256)/MGF1(sha1)
+    var VECTOR_KEY = Buffer.from(
+      'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2UUlCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktjd2dnU2pBZ0VBQW9JQkFRQzA5QmY1NTRXR0VxRXYKMmZyUWxOUG9ycWRMbld5RVAyTGlybGwvekZuUHFnK0c5RkdxYnNNb3o3UG1CUDRpZlRhVFRtSkViaUx1ajkyWQpQM3FieU9JUmN6MkFZQXJkZlE3M0RiSXhYaUZsazNObjlvVnRISVJUcHVvZkwzc2FkVlozMGg5c3JVeTZ4N0Z1ClZvL0ErNDJlSEVRNEdhaGJOSjJsMlh2QU5ydGQwUG5jNlc2MS9pVTdQK3Z4WDJyM0Fqb2VLMjNTWVRxbTkxRTkKMlN0WmVKQjJuSm4rSGxaamV6WTVUblhCZy9HRmFCZGNvR1JMb1diYzFsV2Q0SHNYa1BuVExyTW5UL0xiV1pQZQo4QVpyU253R1Fpa3dud245ZjF3K01ZQ1h6QU0yNWE4STkrZXRacEl0cFN5VUVtWE9yMnEzRkVkMG5RUUVzMHNFCmkrbENlaW5oQWdNQkFBRUNnZ0VBRUpDdDV6YytIblZ6SXczSjY3Rk1LdWRlTWtwaGhrUEZPaW9xMEV1MVJ4RHkKNWZCVXo0emZPY3UxMU05Tk1ud1M5RzQvQ2JPcFoveHNsVVR1WlBlQlZvYWRzVFJabWtnYUNCek5YTDZZd1JNOApBOTdwL1FDWXpvMmZyaVlyRjFONWpIT0VZKzhEY0svYU90Y2F4dGhnY1FKMmJrcFBBclp3M2g5b09FTHFhUjZTClJyNDgxSUZtS0JNdmhyVUQxVFU0MG5jWG43MTdvazlxalR4bFNuOElONElxSmVMTDFPTkFTMDlNSkhISTZPdG8KbHRZUjNWc1RFdE9YTGNsQ2ZubU5ZT2xpeVgrL1VoMTZBak0rSlJmOFRNL2lDYjNkUGFxMyt4UUFCL1oxRnZPZAo0UEFpa01LNVFTc09jdHhxYThwbm10MUlLK1N4MEZ0aUIweThzbWdYM3dLQmdRRHIyNmxLMlIwbmRpWVZDK3hLCjB2SmxYZ0FZeG9TU1IxOS9EdEFQbDdNMkFVVFRzblVFNmlpSCtDbU1ZK1k5Qm0wblkrNGsveThNUG9sdHZ5OUsKQ1ZVT21Ka0hFY3IvZmo3WHl2OEdkTTJSeXVQOHFhRVZxUlh5WU9PMzM5OUt0NzBFb3FFWVJsS0MxQllXcTVWcQovRExURXphSEowSHFXSk85QjB5eW00cDJId0tCZ1FERWFCdEZGN0NqbG1lMVVjUXRDZ0pqZnZPVWF6UTQ3WGdxClpkNTZ6emcyWm5vejZjYzkvTE40WnV5OC8rcFRYcS9GL3E5RjZtb1pyYktHVDBlNFg4dlVtQVZxd3NmQ01TOGcKTWk4Ui8zeGRZdG54Ly9IbW5DUmpYYTJTOUoraWU1Wks3RHpZWGl0Vi9yamEwRHhvWG9RMm82TG9URXQ1WVNTdQpFY2dEclNkZi93S0JnQXZ5dk1qRjV1d3cyQTBJNVplRXlETEthRWJaQjY1QlgxMFlhd0hmTlh6dTQ0VzE3S2VyCkZSS09SOHlNNHdVRVpsTXdoTWZyQlg4aFMrVDdZbkhsdHlGZUthSnFERmFWRnFubjVyTjFCMVR6YWtsS2JwYWkKVWpKTkpqd1NZMFZ0dVcyYXIzNkRVWHEvTTc5Q1FmZUJmekdpTDRqNVBDV2JCeUQwVmJaV210VVJBb0dBY3ZncAo5bUR1c21QSm8zY1FxZml3KzBNR0hMeEFYbzZMaCs0SHRNWDJOc24wQU1sNUt3endsYXRTS3pSM0c0UlN5a2pTCm1zK2tlaEdXYms2Y1FnNDVoK0hSVWZSZzhJalArRDNJRmZZQys3dHdydHRPNDlwRTVyR2dlR1NmeVlJa3NRam0KZVJWdXNyRWZ6bDZVN2RkZDk0b0VRNHpkcFZpN0d2WW5xaGRDOUVzQ2dZRUFwSkJ1SEpFZXYwd1lxUStnNERzVwpxZTVQYWJOY1dVaDJrNUswMGwza0lmMlpweVdWRWs5bnhRVzJIOFVmNHNVc0d0VTBvMmUycEtUanJ1WDRWcVR5CitoeWxrOXZEam1MU29CenFEREU4bFdOK1llU3hBYzJ0WnE2TnpmT0FPZGdHOVN1ODI0MDlEcUtuR1RlQzlKKzAKWHJ6Z21WOGp5K013cU9kQXJ2QXJ0MXM9Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K',
+      'base64'
+    ).toString('utf8');
+    var VECTOR_CT = Buffer.from(
+      'fcAWGHe0HIxC3LcLBwwrkts3005XTSznQZTZZU6EiLOSh/fAfPoe0vF60RcK0IYGW1oDUfuwCl3W+C3HOPTRvFGHiI6AfKCKkj8pTna6WuAZP5x4lBdSKxkIoECgBp+GYko2TMlRn6aW0mOhMCw60P1lT5x93blbbYf4nh0reOtODA8VQBCHnS0wu+qFqIzG/x2UgIbrasnlHo45UlbxdfpOYR08ckKZZrltMZrLcoQnTgrwevwafOg9OvfpY9Kw5Aml+aBhdsabr2aQC5quE6nho0ar/QobPmG5+WzEB5eHn59fTQExDdV2KDcyi7E8xACOjkFFWr+VZmf6t1l59Q==',
+      'base64'
+    );
+    // Wrap it with mgf1p + sha256 DigestMethod, which the library should decrypt with MGF1-sha1.
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + VECTOR_CT.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    var recovered = xmlenc.decryptKeyInfo(keyInfo, { key: VECTOR_KEY });
+    assert.equal(recovered.toString('utf8'), 'AES-128-key-1234');
+  });
+});
+
+describe('rsa-oaep-mgf1p emits MGF1-sha1 ciphertext', function () {
+  var oaep = require('../lib/oaep');
+  var xpath = require('xpath');
+  var xmldom = require('@xmldom/xmldom');
+
+  ['sha256', 'sha512'].forEach(function (digest) {
+    it('wraps the key with MGF1-sha1 when keyEncryptionDigest is ' + digest, function (done) {
+      var options = {
+        rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+        pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+        encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+        keyEncryptionAlgorithm: RSA_OAEP,
+        keyEncryptionDigest: digest
+      };
+      xmlenc.encrypt('mgf1 sha1 content', options, function (err, result) {
+        if (err) return done(err);
+        var doc = new xmldom.DOMParser().parseFromString(result);
+        var cipherValue = xpath.select("//*[local-name(.)='EncryptedKey']/*[local-name(.)='CipherData']/*[local-name(.)='CipherValue']", doc)[0];
+        var wrapped = Buffer.from(cipherValue.textContent, 'base64');
+
+        // Unwrap with MGF1-sha1: succeeds only if encrypt used the spec MGF.
+        var withSha1 = oaep.privateDecryptOaep(fs.readFileSync(__dirname + '/test-auth0.key'), wrapped, { oaepHash: digest, mgf1Hash: 'sha1' });
+        assert(withSha1.length > 0);
+
+        // And the old non-spec MGF1=digest must no longer parse.
+        assert.throws(function () {
+          oaep.privateDecryptOaep(fs.readFileSync(__dirname + '/test-auth0.key'), wrapped, { oaepHash: digest, mgf1Hash: digest });
+        }, /oaep decoding error/);
+        done();
+      });
+    });
+  });
+
+  it('never emits an MGF element for mgf1p', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP,
+      keyEncryptionDigest: 'sha256'
+    };
+    xmlenc.encrypt('x', options, function (err, result) {
+      if (err) return done(err);
+      assert(!/MGF/.test(result), 'MGF element must not be present with mgf1p');
+      done();
+    });
+  });
 });
