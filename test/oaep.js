@@ -51,6 +51,101 @@ describe('oaep', function () {
         assert.equal(e.code, 'ERR_OSSL_RSA_OAEP_DECODING_ERROR');
       }
     });
+
+    // RFC 8017 §7.1.2 rejection guards: encrypt a valid message, corrupt one thing, decrypt.
+    it('rejects when leading byte is not 0x00', function () {
+      var fs = require('fs');
+      var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+      var key = fs.readFileSync(__dirname + '/test-auth0.key');
+      var ct = oaep.publicEncryptOaep(pub, Buffer.from('test'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      // Decrypt to EM, corrupt leading byte, re-encrypt.
+      var em = crypto.privateDecrypt({ key: key, padding: crypto.constants.RSA_NO_PADDING }, ct);
+      em[0] = 0x01;
+      var badCt = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_NO_PADDING }, em);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, badCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
+
+    it('rejects when lHash does not match', function () {
+      var fs = require('fs');
+      var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+      var key = fs.readFileSync(__dirname + '/test-auth0.key');
+      var ct = oaep.publicEncryptOaep(pub, Buffer.from('test'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      var em = crypto.privateDecrypt({ key: key, padding: crypto.constants.RSA_NO_PADDING }, ct);
+      // Corrupt a byte in the lHash region (db[0..31] after unmasking). Flip bit in maskedDB[0].
+      var hLen = 32; // SHA-256
+      var maskedDB = em.subarray(1 + hLen);
+      maskedDB[0] ^= 1;
+      var badCt = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_NO_PADDING }, em);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, badCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
+
+    it('rejects when no 0x01 separator is found', function () {
+      var fs = require('fs');
+      var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+      var key = fs.readFileSync(__dirname + '/test-auth0.key');
+      // Craft an EM where db = lHash || all-zeros (no separator, no message).
+      var hLen = 32;
+      var keyObj = crypto.createPublicKey(pub);
+      var k = Math.ceil(keyObj.asymmetricKeyDetails.modulusLength / 8);
+      var lHash = crypto.createHash('sha256').digest();
+      var db = Buffer.concat([lHash, Buffer.alloc(k - 1 - hLen - hLen)]);
+      var seed = crypto.randomBytes(hLen);
+      var maskedDB = oaep.mgf1(seed, db.length, 'sha1');
+      for (var i = 0; i < db.length; i++) maskedDB[i] ^= db[i];
+      var maskedSeed = oaep.mgf1(maskedDB, hLen, 'sha1');
+      for (var j = 0; j < seed.length; j++) maskedSeed[j] ^= seed[j];
+      var em = Buffer.concat([Buffer.from([0x00]), maskedSeed, maskedDB]);
+      var badCt = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_NO_PADDING }, em);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, badCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
+
+    it('rejects a too-short ciphertext', function () {
+      var fs = require('fs');
+      var key = fs.readFileSync(__dirname + '/test-auth0.key');
+      // Ciphertext length must equal k (modulus size in bytes). A shorter ciphertext
+      // is caught by the ciphertext-length check before raw RSA decrypt.
+      var keyObj = crypto.createPrivateKey(key);
+      var k = Math.ceil(keyObj.asymmetricKeyDetails.modulusLength / 8);
+      var shortCt = Buffer.alloc(k - 1);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, shortCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
+
+    it('rejects when PS contains non-zero bytes before the separator', function () {
+      var fs = require('fs');
+      var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+      var key = fs.readFileSync(__dirname + '/test-auth0.key');
+      // Small message => long PS, so there's guaranteed space to inject 0x02 before the separator.
+      var ct = oaep.publicEncryptOaep(pub, Buffer.from('x'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      var em = crypto.privateDecrypt({ key: key, padding: crypto.constants.RSA_NO_PADDING }, ct);
+      var hLen = 32;
+      var maskedSeed = em.subarray(1, 1 + hLen);
+      var maskedDB = em.subarray(1 + hLen);
+      var seed = oaep.mgf1(maskedDB, hLen, 'sha1');
+      for (var i = 0; i < seed.length; i++) seed[i] ^= maskedSeed[i];
+      var db = oaep.mgf1(seed, maskedDB.length, 'sha1');
+      for (var j = 0; j < db.length; j++) db[j] ^= maskedDB[j];
+      // db: lHash (32) || PS || 0x01 || message. Inject 0x02 in PS well before the separator.
+      db[hLen + 10] = 0x02;
+      // Re-mask both DB and seed so the decode will recover this corrupted db.
+      var newMaskedDB = oaep.mgf1(seed, db.length, 'sha1');
+      for (var m = 0; m < db.length; m++) newMaskedDB[m] ^= db[m];
+      var newMaskedSeed = oaep.mgf1(newMaskedDB, hLen, 'sha1');
+      for (var n = 0; n < seed.length; n++) newMaskedSeed[n] ^= seed[n];
+      // Rebuild EM with the new masked values.
+      em = Buffer.concat([Buffer.from([0x00]), newMaskedSeed, newMaskedDB]);
+      var badCt = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_NO_PADDING }, em);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, badCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
   });
 
   describe('mgf1', function () {
@@ -71,6 +166,8 @@ describe('oaep', function () {
     var fs = require('fs');
     var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
     var key = fs.readFileSync(__dirname + '/test-auth0.key');
+    var keyObj = crypto.createPublicKey(pub);
+    var k = Math.ceil(keyObj.asymmetricKeyDetails.modulusLength / 8);
     var combos = [
       ['sha256', 'sha1'],
       ['sha512', 'sha1'],
@@ -82,9 +179,8 @@ describe('oaep', function () {
     combos.forEach(function (combo) {
       var oaepHash = combo[0];
       var mgf1Hash = combo[1];
-      // 2048-bit key => k = 256 bytes; longest legal message is k - 2*hLen - 2.
       var hLen = crypto.createHash(oaepHash).digest().length;
-      [0, 1, 17, 256 - 2 * hLen - 2].forEach(function (len) {
+      [0, 1, 17, k - 2 * hLen - 2].forEach(function (len) {
         it('round trips oaep=' + oaepHash + ' mgf1=' + mgf1Hash + ' len=' + len, function () {
           var msg = crypto.randomBytes(len);
           var ct = oaep.publicEncryptOaep(pub, msg, { oaepHash: oaepHash, mgf1Hash: mgf1Hash });
@@ -96,7 +192,7 @@ describe('oaep', function () {
 
     it('rejects a message longer than the key allows', function () {
       assert.throws(function () {
-        oaep.publicEncryptOaep(pub, crypto.randomBytes(256), { oaepHash: 'sha256' });
+        oaep.publicEncryptOaep(pub, crypto.randomBytes(k), { oaepHash: 'sha256' });
       }, /message too long/);
     });
 
