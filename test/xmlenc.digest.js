@@ -521,6 +521,8 @@ describe('OAEPparams', function () {
   });
 
   it('round trips keyEncryptionOaepParams through encrypt and decrypt', function (done) {
+    var xmldom = require('@xmldom/xmldom');
+    var xpath = require('xpath');
     xmlenc.encrypt('labelled content', {
       rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
       pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
@@ -530,7 +532,18 @@ describe('OAEPparams', function () {
       keyEncryptionOaepParams: Buffer.from('9lWu3Q==', 'base64')
     }, function (err, result) {
       if (err) return done(err);
-      assert(result.includes('<OAEPparams>9lWu3Q==</OAEPparams>'));
+      // OAEPparams must be in the xenc namespace, not xmldsig, and appear before MGF and DigestMethod.
+      var doc = new xmldom.DOMParser().parseFromString(result);
+      var encMethod = xpath.select("//*[local-name(.)='EncryptedKey']/*[local-name(.)='EncryptionMethod']", doc)[0];
+      var params = xpath.select("*[local-name(.)='OAEPparams']", encMethod);
+      assert.equal(params.length, 1, 'OAEPparams element must be present');
+      assert.equal(params[0].namespaceURI, 'http://www.w3.org/2001/04/xmlenc#', 'OAEPparams must be in xenc namespace');
+      assert.equal(params[0].textContent, '9lWu3Q==', 'OAEPparams value must match');
+      // Verify element ordering: OAEPparams comes before DigestMethod
+      var children = Array.from(encMethod.childNodes).filter(function (n) { return n.nodeType === 1; });
+      var oaepIdx = children.findIndex(function (n) { return n.localName === 'OAEPparams'; });
+      var digestIdx = children.findIndex(function (n) { return n.localName === 'DigestMethod'; });
+      assert(oaepIdx >= 0 && digestIdx >= 0 && oaepIdx < digestIdx, 'OAEPparams must come before DigestMethod');
       xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
         if (err2) return done(err2);
         assert.equal(decrypted, 'labelled content');
