@@ -465,4 +465,77 @@ describe('xmlenc11#rsa-oaep with explicit MGF', function () {
       done();
     });
   });
+
+  it('rejects MGF with "constructor" to avoid prototype pollution', function (done) {
+    xmlenc.encrypt('x', {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP_11,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionMgf: 'constructor'
+    }, function (err) {
+      assert(err, 'expected an error');
+      assert(/keyEncryptionMgf/.test(err.message));
+      done();
+    });
+  });
+
+  it('rejects <MGF Algorithm="constructor" /> on decrypt', function () {
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var wrapped = oaep.publicEncryptOaep(pub, Buffer.alloc(32), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP_11 + '">' +
+      '<MGF Algorithm="constructor" />' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    assert.throws(function () {
+      xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    }, /mask generation function/);
+  });
+});
+
+describe('OAEPparams', function () {
+  var oaep = require('../lib/oaep');
+  var crypto = require('crypto');
+
+  it('decrypts a key wrapped with a non-empty OAEP label', function () {
+    var label = Buffer.from('MYLABEL');
+    var sym = crypto.randomBytes(32);
+    var wrapped = oaep.publicEncryptOaep(fs.readFileSync(__dirname + '/test-auth0_rsa.pub'), sym, {
+      oaepHash: 'sha256', mgf1Hash: 'sha1', oaepLabel: label
+    });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<OAEPparams>' + label.toString('base64') + '</OAEPparams>' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    var recovered = xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    assert.equal(Buffer.compare(Buffer.from(recovered), sym), 0);
+  });
+
+  it('round trips keyEncryptionOaepParams through encrypt and decrypt', function (done) {
+    xmlenc.encrypt('labelled content', {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionOaepParams: Buffer.from('9lWu3Q==', 'base64')
+    }, function (err, result) {
+      if (err) return done(err);
+      assert(result.includes('<OAEPparams>9lWu3Q==</OAEPparams>'));
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'labelled content');
+        done();
+      });
+    });
+  });
 });
