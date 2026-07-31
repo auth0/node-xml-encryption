@@ -319,4 +319,150 @@ describe('rsa-oaep-mgf1p emits MGF1-sha1 ciphertext', function () {
       done();
     });
   });
+
+  it('rejects MGF element when present with mgf1p', function () {
+    var oaep = require('../lib/oaep');
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var wrapped = oaep.publicEncryptOaep(pub, Buffer.alloc(32), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<MGF xmlns="http://www.w3.org/2009/xmlenc11#" Algorithm="http://www.w3.org/2009/xmlenc11#mgf1sha256" />' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    assert.throws(function () {
+      xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    }, /MGF element must not be present/);
+  });
+});
+
+describe('xmlenc11#rsa-oaep with explicit MGF', function () {
+  var RSA_OAEP_11 = 'http://www.w3.org/2009/xmlenc11#rsa-oaep';
+  var oaep = require('../lib/oaep');
+
+  it('round trips sha256 digest with an explicit mgf1sha256', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP_11,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionMgf: 'sha256'
+    };
+    xmlenc.encrypt('xmlenc11 content', options, function (err, result) {
+      if (err) return done(err);
+      assert(result.includes('http://www.w3.org/2009/xmlenc11#mgf1sha256'), 'expected MGF element');
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'xmlenc11 content');
+        done();
+      });
+    });
+  });
+
+  it('round trips sha256 digest with mgf1sha1 (the default)', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP_11,
+      keyEncryptionDigest: 'sha256'
+    };
+    xmlenc.encrypt('default mgf', options, function (err, result) {
+      if (err) return done(err);
+      assert(result.includes('http://www.w3.org/2009/xmlenc11#mgf1sha1'));
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'default mgf');
+        done();
+      });
+    });
+  });
+
+  it('rejects an unknown MGF URI rather than defaulting to sha1', function () {
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var wrapped = oaep.publicEncryptOaep(pub, Buffer.alloc(32), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP_11 + '">' +
+      '<MGF Algorithm="http://example.org/mgf1sha3" />' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    assert.throws(function () {
+      xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    }, /mask generation function/);
+  });
+
+  it('accepts the MGF1withSHA1 spelling from spec Example 33', function () {
+    // 5.5.2's normative list says xmlenc11#mgf1sha1, but Example 33 in the same
+    // section writes xmlenc#MGF1withSHA1. Implementations copied the example.
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var sym = require('crypto').randomBytes(32);
+    var wrapped = oaep.publicEncryptOaep(pub, sym, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP_11 + '">' +
+      '<MGF Algorithm="http://www.w3.org/2001/04/xmlenc#MGF1withSHA1" />' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    var recovered = xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    assert.equal(Buffer.compare(Buffer.from(recovered), sym), 0);
+  });
+
+  it('rejects keyEncryptionMgf under mgf1p instead of silently ignoring it', function (done) {
+    xmlenc.encrypt('x', {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionMgf: 'sha256'
+    }, function (err) {
+      assert(err, 'expected an error');
+      assert(/keyEncryptionMgf/.test(err.message));
+      done();
+    });
+  });
+
+  it('accepts keyEncryptionMgf as a full MGF URI', function (done) {
+    var options = {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP_11,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionMgf: 'http://www.w3.org/2009/xmlenc11#mgf1sha256'
+    };
+    xmlenc.encrypt('uri form', options, function (err, result) {
+      if (err) return done(err);
+      assert(result.includes('http://www.w3.org/2009/xmlenc11#mgf1sha256'));
+      xmlenc.decrypt(result, { key: fs.readFileSync(__dirname + '/test-auth0.key') }, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'uri form');
+        done();
+      });
+    });
+  });
+
+  it('rejects an unsupported keyEncryptionMgf value', function (done) {
+    xmlenc.encrypt('x', {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_OAEP_11,
+      keyEncryptionDigest: 'sha256',
+      keyEncryptionMgf: 'md5'
+    }, function (err) {
+      assert(err, 'expected an error');
+      assert(/keyEncryptionMgf/.test(err.message));
+      assert(/md5/.test(err.message));
+      done();
+    });
+  });
 });
