@@ -203,3 +203,47 @@ describe('DigestMethod resolution with RetrievalMethod', function () {
     });
   });
 });
+
+describe('rsa-oaep-mgf1p pins MGF1 to sha1', function () {
+  var crypto = require('crypto');
+  var oaep = require('../lib/oaep');
+
+  // Build a KeyInfo whose EncryptedKey was wrapped with OAEP(sha256)/MGF1(sha1),
+  // i.e. what a spec-compliant IdP such as ADFS or Okta actually sends.
+  function specCompliantKeyInfo(symmetricKey, digest) {
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var wrapped = oaep.publicEncryptOaep(pub, symmetricKey, { oaepHash: digest, mgf1Hash: 'sha1' });
+    return '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#' + digest + '" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+  }
+
+  ['sha256', 'sha512'].forEach(function (digest) {
+    it('decrypts a spec-correct MGF1-sha1 key with DigestMethod ' + digest, function () {
+      var symmetricKey = crypto.randomBytes(32);
+      var recovered = xmlenc.decryptKeyInfo(specCompliantKeyInfo(symmetricKey, digest), {
+        key: fs.readFileSync(__dirname + '/test-auth0.key')
+      });
+      assert.equal(Buffer.compare(Buffer.from(recovered), symmetricKey), 0);
+    });
+  });
+
+  it('rejects a key wrapped with the non-spec MGF1=sha256', function () {
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var wrapped = oaep.publicEncryptOaep(pub, crypto.randomBytes(32), { oaepHash: 'sha256', mgf1Hash: 'sha256' });
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    assert.throws(function () {
+      xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    }, /oaep decoding error/);
+  });
+});
