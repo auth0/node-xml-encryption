@@ -533,6 +533,29 @@ describe('OAEPparams', function () {
     assert.equal(Buffer.compare(Buffer.from(recovered), sym), 0);
   });
 
+  it('decrypts a labelled key via the native path when MGF1 matches the OAEP digest', function () {
+    // Matching digests (sha1/sha1) + a label must NOT force the custom shim:
+    // the label is routed through Node's native oaepLabel option. Guards
+    // against label.length creeping back into the needsShim condition.
+    var label = Buffer.from('MYLABEL');
+    var sym = crypto.randomBytes(32);
+    var wrapped = crypto.publicEncrypt({
+      key: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha1',
+      oaepLabel: label
+    }, sym);
+    var keyInfo = '<KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#">' +
+      '<e:EncryptedKey xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+      '<e:EncryptionMethod Algorithm="' + RSA_OAEP + '">' +
+      '<OAEPparams>' + label.toString('base64') + '</OAEPparams>' +
+      '</e:EncryptionMethod>' +
+      '<e:CipherData><e:CipherValue>' + wrapped.toString('base64') + '</e:CipherValue></e:CipherData>' +
+      '</e:EncryptedKey></KeyInfo>';
+    var recovered = xmlenc.decryptKeyInfo(keyInfo, { key: fs.readFileSync(__dirname + '/test-auth0.key') });
+    assert.equal(Buffer.compare(Buffer.from(recovered), sym), 0);
+  });
+
   it('round trips keyEncryptionOaepParams through encrypt and decrypt', function (done) {
     var xmldom = require('@xmldom/xmldom');
     var xpath = require('xpath');
