@@ -2,20 +2,13 @@
 
 ### ⚠ BREAKING CHANGES
 
-* the rsa-oaep-mgf1p identifier fixes MGF1 to SHA-1 per
-XML-Enc 1.1 section 5.5.2, and DigestMethod selects only the OAEP message
-digest. Ciphertext produced by this library with keyEncryptionDigest sha256
-or sha512 (v3.1.0 through v5.0.0) used MGF1 matching the digest and no
-longer decrypts; it was never interoperable with compliant peers.
-
-* fix!: emit MGF1-SHA1 ciphertext for rsa-oaep-mgf1p
-* encrypting with keyEncryptionDigest sha256 or sha512 under
-rsa-oaep-mgf1p now wraps the key with MGF1-SHA1, as the identifier requires.
-Peers that adapted to the previous non-compliant output must switch to the
+* **rsa-oaep-mgf1p now emits and expects MGF1-SHA1.** The `http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p` identifier fixes the mask generation function to MGF1-SHA1 per XML-Enc 1.1. Previously `keyEncryptionDigest: 'sha256'` or `'sha512'` also drove MGF1, producing MGF1-SHA256/SHA512 ciphertext that is not interoperable with spec-compliant peers (Java xmlsec, .NET `System.Security.Cryptography.Xml`). Such ciphertext will no longer decrypt with this version. Callers who genuinely need a non-SHA-1 MGF1 must switch to the `xmlenc11#rsa-oaep` identifier with the new `keyEncryptionMgf` option.
 
 ### Features
 
-* mask generation should use sha1 for rsa-oaep-mgf1p ([#140](https://github.com/auth0/node-xml-encryption/issues/140)) ([48f0059](https://github.com/auth0/node-xml-encryption/commit/48f0059c149e3b3518c40b7e3209908ae4181bc5)), closes [xmlenc11#rsa-oaep](https://github.com/auth0/xmlenc11/issues/rsa-oaep) [xmlenc11#rsa-oaep](https://github.com/auth0/xmlenc11/issues/rsa-oaep) [xmlenc11#rsa-oaep](https://github.com/auth0/xmlenc11/issues/rsa-oaep) [xmlenc11#mgf1sha1](https://github.com/auth0/xmlenc11/issues/mgf1sha1) [xmlenc#MGF1withSHA1](https://github.com/auth0/xmlenc/issues/MGF1withSHA1)
+* **Support `http://www.w3.org/2009/xmlenc11#rsa-oaep`** — The new `keyEncryptionMgf` option selects the MGF1 digest (`sha1`, `sha224`, `sha256`, `sha384`, `sha512`, or the full `xmlenc11#mgf1*` URI; default `sha1`).
+* **OAEP label support** — supply `keyEncryptionOaepParams` (a Buffer or base64 string) to set the OAEP label; it is emitted as an `<xenc:OAEPparams>` element and honoured on decrypt.
+* Digest/MGF1 combinations Node's `crypto` cannot express (MGF1 digest ≠ message digest) are computed via an EME-OAEP shim over the raw RSA primitive.
 
 ## [5.0.0](https://github.com/auth0/node-xml-encryption/compare/v4.0.1...v5.0.0) (2026-07-02)
 
