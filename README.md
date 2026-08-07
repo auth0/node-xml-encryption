@@ -75,6 +75,7 @@ Currently the library supports:
 
 * EncryptedKey to transport symmetric key using:
   * http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p
+  * http://www.w3.org/2009/xmlenc11#rsa-oaep
   * http://www.w3.org/2001/04/xmlenc#rsa-1_5 (Insecure Algorithm)
 
 * EncryptedData using:
@@ -91,6 +92,30 @@ A warning will be piped to `stderr` using console.warn() by default when the afo
 We recommend usage of AES-256-GCM (Galois/Counter Mode) for the strongest security posture and to align with current industry best practices.
 
 Note that `xml-encryption` versions prior to 4.0 supported AES-128-CBC and AES-256-CBC as secure algorithms. In version 4.0 onwards, these are treated as insecure because they use the Cipher Block Chaining (CBC) mode of encryption, which does not provide integrity guarantees. To continue using AES128-CBC and AES256-CBC, enable support for insecure algorithms via `disallowEncryptionWithInsecureAlgorithm/disallowDecryptionWithInsecureAlgorithm`.
+
+### RSA-OAEP mask generation (MGF1)
+
+`http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p` fixes the mask generation function to **MGF1 with SHA-1**, per [XML Encryption 1.1 §5.5.2][xmlenc-oaep]. `keyEncryptionDigest` selects only the OAEP message digest, so `keyEncryptionDigest: 'sha256'` means OAEP-SHA256 with MGF1-SHA1.
+
+To use a different MGF1 digest, use the XML Encryption 1.1 identifier, which carries an explicit `<MGF>` element:
+
+~~~js
+var options = {
+  keyEncryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#rsa-oaep',
+  keyEncryptionDigest: 'sha256',
+  keyEncryptionMgf: 'sha256'   // sha1 | sha224 | sha256 | sha384 | sha512, default sha1
+};
+~~~
+
+`keyEncryptionMgf` accepts either a short digest name (`sha1`, `sha224`, `sha256`, `sha384`, or `sha512`) or a full `http://www.w3.org/2009/xmlenc11#mgf1*` URI. It is rejected with `rsa-oaep-mgf1p`, which has no valid MGF other than SHA-1.
+
+An optional OAEP label may be supplied as `keyEncryptionOaepParams` (a Buffer or a base64 string); it is emitted as `<OAEPparams>` and honoured on decrypt.
+
+Note: for the digest/MGF1 combinations Node's `crypto` cannot express, the OAEP padding is computed in JavaScript over the raw RSA primitive. That code path cannot offer the constant-time guarantees of OpenSSL's C implementation. It is used only when the MGF1 digest differs from the message digest; all other combinations go through `crypto.privateDecrypt` unchanged.
+
+**Breaking change:** in versions 3.1.0 through 5.0.0, `rsa-oaep-mgf1p` with `keyEncryptionDigest: 'sha256'` or `'sha512'` produced ciphertext using MGF1-SHA256 or MGF1-SHA512, which was never compliant with the W3C specification. `rsa-oaep-mgf1p` now produces MGF1-SHA1 ciphertext regardless of `keyEncryptionDigest`. Documents encrypted with the earlier behaviour will not decrypt with the current version; they were never interoperable with Java xmlsec, .NET `System.Security.Cryptography.Xml`, or other spec-compliant peers. Callers who genuinely need MGF1-SHA256 or MGF1-SHA512 should use `http://www.w3.org/2009/xmlenc11#rsa-oaep` with the `keyEncryptionMgf` option.
+
+[xmlenc-oaep]: https://www.w3.org/TR/xmlenc-core1/#sec-RSA-OAEP
 
 ### Allow listing specific algorithms when decrypting
 
