@@ -564,4 +564,19 @@ describe('OAEPparams', function () {
       });
     });
   });
+
+  it('rejects keyEncryptionOaepParams under rsa-1_5 instead of silently ignoring it', function (done) {
+    xmlenc.encrypt('x', {
+      rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+      pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+      encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+      keyEncryptionAlgorithm: RSA_1_5,
+      keyEncryptionOaepParams: Buffer.from('9lWu3Q==', 'base64'),
+      disallowEncryptionWithInsecureAlgorithm: false
+    }, function (err) {
+      assert(err, 'expected an error');
+      assert(/keyEncryptionOaepParams/.test(err.message));
+      done();
+    });
+  });
 });
