@@ -1,5 +1,6 @@
 var assert = require('assert');
 var crypto = require('crypto');
+var sinon = require('sinon');
 var oaep = require('../lib/oaep');
 
 // Throwaway 2048-bit key + ciphertext from the ESD-63620 repro. Produced by:
@@ -145,6 +146,39 @@ describe('oaep', function () {
       assert.throws(function () {
         oaep.privateDecryptOaep(key, badCt, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
       }, function (e) { return e.code === 'ERR_OSSL_RSA_OAEP_DECODING_ERROR'; });
+    });
+  });
+
+  describe('FIPS mode gate', function () {
+    var fs = require('fs');
+    var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
+    var key = fs.readFileSync(__dirname + '/test-auth0.key');
+
+    afterEach(function () {
+      sinon.restore();
+    });
+
+    it('refuses publicEncryptOaep when FIPS mode is enabled', function () {
+      sinon.stub(crypto, 'getFips').returns(1);
+      assert.throws(function () {
+        oaep.publicEncryptOaep(pub, Buffer.from('test'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_XMLENC_FIPS_UNSUPPORTED'; });
+    });
+
+    it('refuses privateDecryptOaep when FIPS mode is enabled', function () {
+      // Encrypt outside FIPS, then assert decrypt is blocked under FIPS.
+      var ct = oaep.publicEncryptOaep(pub, Buffer.from('test'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      sinon.stub(crypto, 'getFips').returns(1);
+      assert.throws(function () {
+        oaep.privateDecryptOaep(key, ct, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      }, function (e) { return e.code === 'ERR_XMLENC_FIPS_UNSUPPORTED'; });
+    });
+
+    it('runs normally when FIPS mode is disabled', function () {
+      sinon.stub(crypto, 'getFips').returns(0);
+      var ct = oaep.publicEncryptOaep(pub, Buffer.from('test'), { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      var pt = oaep.privateDecryptOaep(key, ct, { oaepHash: 'sha256', mgf1Hash: 'sha1' });
+      assert.equal(pt.toString(), 'test');
     });
   });
 
