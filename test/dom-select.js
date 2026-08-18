@@ -4,6 +4,7 @@ var fs = require('fs');
 var xmldom = require('@xmldom/xmldom');
 var xpath = require('xpath');
 var dom = require('../lib/dom-select');
+var oaep = require('../lib/oaep');
 var xmlenc = require('../lib/xmlenc');
 
 var XENC = 'http://www.w3.org/2001/04/xmlenc#';
@@ -187,13 +188,15 @@ describe('decryptKeyInfo element resolution', function () {
   var pub = fs.readFileSync(__dirname + '/test-auth0_rsa.pub');
   var key = fs.readFileSync(__dirname + '/test-auth0.key');
 
-  // master's decrypt path uses crypto directly; oaepHash follows DigestMethod.
+  // All fixtures use rsa-oaep-mgf1p, which fixes MGF1 to SHA-1 (XML-Enc 1.1
+  // 5.5.2) independently of the OAEP DigestMethod. crypto.publicEncrypt cannot
+  // set MGF1 apart from oaepHash, so wrap through the same OAEP shim the decrypt
+  // path uses to produce ciphertext with oaepHash=DigestMethod and MGF1-SHA1.
   function wrap(symmetricKey, oaepHash) {
-    return crypto.publicEncrypt({
-      key: pub,
-      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-      oaepHash: oaepHash
-    }, symmetricKey);
+    return oaep.publicEncryptOaep(pub, symmetricKey, {
+      oaepHash: oaepHash,
+      mgf1Hash: 'sha1'
+    });
   }
 
   it('pairs DigestMethod with the EncryptedKey actually in use', function () {
