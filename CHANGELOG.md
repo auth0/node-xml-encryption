@@ -1,3 +1,15 @@
+## [6.0.0](https://github.com/auth0/node-xml-encryption/compare/v5.0.0...v6.0.0) (2026-08-07)
+
+### ⚠ BREAKING CHANGES
+
+* **rsa-oaep-mgf1p now emits and expects MGF1-SHA1.** The `http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p` identifier fixes the mask generation function to MGF1-SHA1 per XML-Enc 1.1. Previously `keyEncryptionDigest: 'sha256'` or `'sha512'` also drove MGF1, producing MGF1-SHA256/SHA512 ciphertext that is not interoperable with spec-compliant peers (Java xmlsec, .NET `System.Security.Cryptography.Xml`). Such ciphertext will no longer decrypt with this version. Callers who genuinely need a non-SHA-1 MGF1 must switch to the `xmlenc11#rsa-oaep` identifier with the new `keyEncryptionMgf` option.
+
+### Features
+
+* **Support `http://www.w3.org/2009/xmlenc11#rsa-oaep`** — The new `keyEncryptionMgf` option selects the MGF1 digest (`sha1`, `sha224`, `sha256`, `sha384`, `sha512`, or the full `xmlenc11#mgf1*` URI; default `sha1`).
+* **OAEP label support** — supply `keyEncryptionOaepParams` (a Buffer or base64 string) to set the OAEP label; it is emitted as an `<xenc:OAEPparams>` element and honoured on decrypt.
+* Digest/MGF1 combinations Node's `crypto` cannot express (MGF1 digest ≠ message digest) are computed via an EME-OAEP shim over the raw RSA primitive.
+
 ## [5.0.0](https://github.com/auth0/node-xml-encryption/compare/v4.0.1...v5.0.0) (2026-07-02)
 
 ### ⚠ BREAKING CHANGES
