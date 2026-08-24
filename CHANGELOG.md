@@ -1,3 +1,9 @@
+## [6.0.1](https://github.com/auth0/node-xml-encryption/compare/v6.0.0...v6.0.1) (2026-08-24)
+
+### Bug Fixes
+
+* resolve XML-Enc elements by DOM traversal instead of XPath ([#141](https://github.com/auth0/node-xml-encryption/issues/141)) ([2f9ed67](https://github.com/auth0/node-xml-encryption/commit/2f9ed677c10f75233f9b3feb1e5043b520caadbf))
+
 ## [6.0.0](https://github.com/auth0/node-xml-encryption/compare/v5.0.0...v6.0.0) (2026-08-07)
 
 ### ⚠ BREAKING CHANGES
