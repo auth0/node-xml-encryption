@@ -603,3 +603,91 @@ describe('OAEPparams', function () {
     });
   });
 });
+
+describe('RetrievalMethod to a sibling EncryptedKey (Okta layout)', function () {
+  var xmldom = require('@xmldom/xmldom');
+  var options = {
+    rsa_pub: fs.readFileSync(__dirname + '/test-auth0_rsa.pub'),
+    pem: fs.readFileSync(__dirname + '/test-auth0.pem'),
+    encryptionAlgorithm: 'http://www.w3.org/2009/xmlenc11#aes256-gcm',
+    keyEncryptionAlgorithm: RSA_OAEP,
+    keyEncryptionDigest: 'sha256'
+  };
+  var decryptOptions = { key: fs.readFileSync(__dirname + '/test-auth0.key') };
+
+  // Wraps the result in an EncryptedAssertion, with the EncryptedKey placed
+  // as a sibling of EncryptedData and referenced by RetrievalMethod.
+  function siblingLayout(result, wrap) {
+    var m = /<e:EncryptedKey[\s\S]*<\/e:EncryptedKey>/.exec(result);
+    assert(m, 'expected an EncryptedKey element');
+    var encryptedKey = m[0].replace('<e:EncryptedKey', '<e:EncryptedKey Id="ek1"');
+    var encryptedData = result.replace(m[0], '<RetrievalMethod URI="#ek1" />');
+    return wrap(encryptedData, encryptedKey);
+  }
+
+  function encryptedDataOf(xml) {
+    var doc = new xmldom.DOMParser().parseFromString(xml);
+    return doc.getElementsByTagNameNS('http://www.w3.org/2001/04/xmlenc#', 'EncryptedData')[0];
+  }
+
+  it('resolves the key from the EncryptedData parent', function (done) {
+    xmlenc.encrypt('sibling content', options, function (err, result) {
+      if (err) return done(err);
+      var xml = siblingLayout(result, function (data, key) {
+        return '<saml2:EncryptedAssertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:e="http://www.w3.org/2001/04/xmlenc#">' +
+          data + key + '</saml2:EncryptedAssertion>';
+      });
+      var element = encryptedDataOf(xml);
+      assert.equal(element.parentNode.localName, 'EncryptedAssertion');
+      xmlenc.decrypt(element, decryptOptions, function (err2, decrypted) {
+        if (err2) return done(err2);
+        assert.equal(decrypted, 'sibling content');
+        done();
+      });
+    });
+  });
+
+  it('finds the key in an Okta-shaped response (fails at the RSA unwrap, not the lookup)', function () {
+    // Okta layout with all identifiers and ciphertext replaced by dummies, so the
+    // key cannot unwrap; failing at the RSA step proves the key was located.
+    var xml = fs.readFileSync(__dirname + '/test-okta-sibling-key.xml', 'utf8');
+    var element = encryptedDataOf(xml);
+    assert.throws(function () {
+      xmlenc.decryptKeyInfo(element, decryptOptions);
+    }, function (err) {
+      return !/cant find encryption algorithm/.test(err.message);
+    });
+  });
+
+  it('uses the key of the EncryptedData being decrypted when another block has an inline key', function (done) {
+    xmlenc.encrypt('first block', options, function (err, first) {
+      if (err) return done(err);
+      xmlenc.encrypt('second block', options, function (err2, second) {
+        if (err2) return done(err2);
+        var xml = siblingLayout(first, function (data, key) {
+          return '<Root xmlns:e="http://www.w3.org/2001/04/xmlenc#">' + data + key + second + '</Root>';
+        });
+        var doc = new xmldom.DOMParser().parseFromString(xml);
+        xmlenc.decrypt(doc, decryptOptions, function (err3, decrypted) {
+          if (err3) return done(err3);
+          assert.equal(decrypted, 'first block');
+          done();
+        });
+      });
+    });
+  });
+
+  it('does not resolve an EncryptedKey outside the EncryptedData parent', function (done) {
+    xmlenc.encrypt('sibling content', options, function (err, result) {
+      if (err) return done(err);
+      var xml = siblingLayout(result, function (data, key) {
+        return '<Root xmlns:e="http://www.w3.org/2001/04/xmlenc#"><A>' + data + '</A><B>' + key + '</B></Root>';
+      });
+      xmlenc.decrypt(encryptedDataOf(xml), decryptOptions, function (err2) {
+        assert(err2, 'expected failure');
+        assert.match(err2.message, /cant find encryption algorithm/);
+        done();
+      });
+    });
+  });
+});

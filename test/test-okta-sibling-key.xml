@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<saml2p:Response Destination="https://example.com/login/callback" ID="id0000000000000000000000000001" Version="2.0" xmlns:saml2p="urn:oasis:names:tc:SAML:2.0:protocol">
+    <saml2:EncryptedAssertion xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
+        <xenc:EncryptedData Id="_00000000000000000000000000000001" Type="http://www.w3.org/2001/04/xmlenc#Element" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2009/xmlenc11#aes128-gcm" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"/>
+            <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <ds:RetrievalMethod Type="http://www.w3.org/2001/04/xmlenc#EncryptedKey" URI="#_00000000000000000000000000000002"/>
+            </ds:KeyInfo>
+            <xenc:CipherData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+                <xenc:CipherValue>vsSeiTCI4zf0LRuFBxUmIhyhbPO6kVN152a3rMPGeNE4I5WrYzbd0JRUTAl6fXKF</xenc:CipherValue>
+            </xenc:CipherData>
+        </xenc:EncryptedData>
+        <xenc:EncryptedKey Id="_00000000000000000000000000000002" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+            <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#rsa-oaep-mgf1p" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+                <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"/>
+            </xenc:EncryptionMethod>
+            <xenc:CipherData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+                <xenc:CipherValue>JhwBazYQHN81PuOKRbHt4lbCttx6F0BZvjeCGrU7tziGi5ncMwd0ld2kcvYaOwncgVWv3nPCVJGGtoJUILg8z71mZJXuoz3MRufQ0G1TACKOAKbWhvI5ZIDEOAzuZzr385zKrNV7Zs7yTGAV/RezogddIUD6e/UokXQgvOcByeOh+2xAP8QLWqrBgrFwSIr+HKwEp3T921y7EHjS5SzRXzjubwXw8PTZlwS/nj8VJ9IBL3yqjEEaX0fsPoCgbmNnJddxW7g9SVaI/1YmAkHGMlLx2ruY++UQDL/uz9Y0Dm91IMF0ZRLA0LHSjHDJvdu2FckWkwM98JpjYQnfopSS8w==</xenc:CipherValue>
+            </xenc:CipherData>
+        </xenc:EncryptedKey>
+    </saml2:EncryptedAssertion>
+</saml2p:Response>

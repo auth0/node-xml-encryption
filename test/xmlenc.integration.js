@@ -30,4 +30,25 @@ describe('integration', function() {
       }
     );
   });
+
+  // passport-wsfed-saml2 passes only the EncryptedData element, while Okta
+  // places the referenced EncryptedKey beside it under EncryptedAssertion.
+  it('should decrypt Okta assertion when given only the EncryptedData element', function (done) {
+    var doc = new xmldom.DOMParser().parseFromString(
+      fs.readFileSync(__dirname + '/test-okta-enc-response.xml').toString()
+    );
+    var encryptedData = doc.getElementsByTagNameNS('http://www.w3.org/2001/04/xmlenc#', 'EncryptedData')[0]
+      || doc.getElementsByTagName('EncryptedData')[0];
+    assert.equal(encryptedData.parentNode.localName, 'EncryptedAssertion');
+
+    xmlenc.decrypt(
+      encryptedData,
+      {key: fs.readFileSync(__dirname + '/test-okta.pem'), disallowDecryptionWithInsecureAlgorithm: false},
+      (err, res) => {
+        assert.ifError(err);
+        assert(/Assertion/.test(res));
+        done();
+      }
+    );
+  });
 });
