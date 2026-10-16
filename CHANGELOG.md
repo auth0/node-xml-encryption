@@ -1,3 +1,9 @@
+## [6.0.2](https://github.com/auth0/node-xml-encryption/compare/v6.0.1...v6.0.2) (2026-10-16)
+
+### Bug Fixes
+
+* okta sibling case ([#151](https://github.com/auth0/node-xml-encryption/issues/151)) ([da5b083](https://github.com/auth0/node-xml-encryption/commit/da5b0834626bc6a9ac5c7d0fbf8ce0409308ceec))
+
 ## [6.0.1](https://github.com/auth0/node-xml-encryption/compare/v6.0.0...v6.0.1) (2026-08-24)
 
 ### Bug Fixes
